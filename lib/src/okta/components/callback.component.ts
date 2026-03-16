@@ -10,25 +10,20 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-import { Component, OnInit, Optional, Injector, Inject } from '@angular/core';
+import { Component, inject, Injector, OnInit } from '@angular/core';
 import { OktaAuth } from '@okta/okta-auth-js';
 import { OKTA_AUTH } from '../models/okta.config';
-import { OktaAuthConfigService } from '../services/auth-config.serice';
+import { OktaAuthConfigService } from '../services/auth-config.service';
 
 @Component({
-  // This is temporary until we migrate to standalone components
-  // eslint-disable-next-line @angular-eslint/prefer-standalone
-  standalone: false,
   template: `<div>{{error}}</div>`
 })
 export class OktaCallbackComponent implements OnInit {
   error?: string;
 
-  constructor(
-    private configService: OktaAuthConfigService,
-    @Inject(OKTA_AUTH) private oktaAuth: OktaAuth,
-    @Optional() private injector?: Injector
-  ) {}
+  private configService = inject(OktaAuthConfigService);
+  private oktaAuth = inject<OktaAuth>(OKTA_AUTH);
+  private injector = inject(Injector, { optional: true });
 
   async ngOnInit(): Promise<void> {
     const config = this.configService.getConfig();

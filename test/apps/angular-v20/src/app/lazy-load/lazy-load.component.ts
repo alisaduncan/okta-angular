@@ -14,7 +14,6 @@ import { Component } from '@angular/core';
 
 @Component({
   selector: 'app-lazy-load',
-  standalone: false,
   template: `
   <div>Lazy Load</div>
   `

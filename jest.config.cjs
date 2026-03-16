@@ -13,10 +13,7 @@ module.exports = {
     }]
   ],
   restoreMocks: true,
-  transform: {
-    "^.+\\.(ts|tsx)$": 'ts-jest',
-  },
-  preset: "jest-preset-angular",
+
   roots: [
     "./test/spec"
   ],

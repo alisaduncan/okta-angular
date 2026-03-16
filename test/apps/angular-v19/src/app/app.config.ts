@@ -1,16 +1,18 @@
-import { APP_INITIALIZER, ApplicationConfig, importProvidersFrom, Provider, provideZoneChangeDetection } from '@angular/core';
+import { ApplicationConfig, EnvironmentProviders, inject, Provider, provideAppInitializer, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 
 import { routes } from './app.routes';
-import { OktaAuthConfigService, OktaAuthModule, OktaConfig } from '@okta/okta-angular';
+import { OktaAuthConfigService, OktaConfig, provideOktaAuth, withOktaConfig } from '@okta/okta-angular';
 import { environment } from '../environments/environment';
 import { OktaAuth } from '@okta/okta-auth-js';
 
 let oktaConfig: OktaConfig | undefined;
-let providers: Provider[] = [];
+let providers: (Provider|EnvironmentProviders)[] = [];
 if (environment.asyncOktaConfig) {
-  const configInitializer = (configService: OktaAuthConfigService) => {
-    return async () => {
+  providers = [
+    provideOktaAuth(),
+    provideAppInitializer(async () => {
+      const configService = inject(OktaAuthConfigService);
       // Use asynchronous import of configuration
       // You can also load configuration with HTTP request here with HttpClient
       // eslint-disable-next-line node/no-unpublished-import, node/no-missing-import, import/no-unresolved
@@ -20,27 +22,20 @@ if (environment.asyncOktaConfig) {
         oktaAuth
       };
       configService.setConfig(oktaConfig);
-    };
-  };
-  providers = [
-    {
-    provide: APP_INITIALIZER,
-    useFactory: configInitializer,
-    deps: [OktaAuthConfigService],
-    multi: true
-  }];
+    })
+  ];
 } else {
   const oktaAuth = new OktaAuth(environment.oidc);
   oktaConfig = {
     oktaAuth
   };
+  providers = [provideOktaAuth(withOktaConfig(oktaConfig))];
 }
 
 export const appConfig: ApplicationConfig = {
   providers: [
     ...providers,
     provideZoneChangeDetection({ eventCoalescing: true }),
-    provideRouter(routes),
-    importProvidersFrom(OktaAuthModule.forRoot(oktaConfig),)
+    provideRouter(routes)
   ]
 };

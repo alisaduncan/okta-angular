@@ -1,13 +1,7 @@
-import { enableProdMode } from '@angular/core';
+import { bootstrapApplication } from '@angular/platform-browser';
+import { appConfig } from './app/app.config';
+import { AppComponent } from './app/app.component';
 
-import { AppModule } from './app/app.module';
-// eslint-disable-next-line node/no-unpublished-import, node/no-missing-import
-import { environment } from './environments/environment';
-import { platformBrowser } from '@angular/platform-browser';
+bootstrapApplication(AppComponent, appConfig)
+  .catch((err) => console.error(err));
 
-if (environment.production) {
-  enableProdMode();
-}
-
-platformBrowser().bootstrapModule(AppModule)
-  .catch(err => console.error(err));

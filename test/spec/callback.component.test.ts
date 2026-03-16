@@ -22,7 +22,7 @@ describe('OktaCallbackComponent', () => {
 
   beforeEach( () => {
     TestBed.configureTestingModule({
-      declarations: [OktaCallbackComponent],
+      // declarations: [OktaCallbackComponent],
       providers: [
         { provide: OktaAuthConfigService, useValue: configService },
         { provide: OKTA_AUTH, useValue: oktaAuth }

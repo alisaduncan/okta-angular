@@ -15,7 +15,7 @@ import { RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-public',
-  standalone: false,
+  imports: [RouterOutlet],
   template: `
   <div id="public-message">
   {{ message }}

@@ -16,7 +16,7 @@ import { OKTA_AUTH } from '@okta/okta-angular';
 
 @Component({
   selector: 'app-session-login',
-  standalone: false,
+  imports: [RouterOutlet],
   template: `
   <router-outlet></router-outlet>
 

@@ -6,9 +6,7 @@ import { OktaHasAnyGroupDirective } from '../../lib/src/okta/has-any-group.direc
 import { OktaAuthStateService } from '../../lib/src/okta-angular';
 
 @Component({ 
-  // This is temporary until we migrate to standalone components
-  // eslint-disable-next-line @angular-eslint/prefer-standalone
-  standalone: false,
+  imports: [OktaHasAnyGroupDirective],
   template: `
   <div *oktaHasAnyGroup="['test']">
     <div id="content">In group</div>
@@ -19,14 +17,11 @@ class MockComponent {}
 
 function setup(oktaAuthStateService: OktaAuthStateService) {
   TestBed.configureTestingModule({
-    declarations: [ 
-      OktaHasAnyGroupDirective,
-      MockComponent
-    ],
+    imports: [MockComponent],
     providers: [{
       provide: OktaAuthStateService,
       useValue: oktaAuthStateService
-    }]
+    }],
   });
   return TestBed.createComponent(MockComponent);
 }

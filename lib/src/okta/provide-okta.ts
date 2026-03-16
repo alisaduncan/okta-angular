@@ -10,52 +10,42 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-import { NgModule, ModuleWithProviders, Optional } from '@angular/core';
+import { EnvironmentProviders, makeEnvironmentProviders, Optional, Provider } from '@angular/core';
 import { Router } from '@angular/router';
 import { Location } from '@angular/common';
-import { OktaCallbackComponent } from './components/callback.component';
+import { OktaAuthConfigService, OktaAuthStateService, OKTA_AUTH, OKTA_CONFIG, OktaConfig } from '../okta-angular';
 import { OktaAuthGuard } from './okta.guard';
-import { OktaAuthConfigService } from './services/auth-config.serice';
-import { OktaAuthStateService } from './services/auth-state.service';
 import { OktaAuthFactoryService } from './services/auth-factory.service';
-import { OktaHasAnyGroupDirective } from './has-any-group.directive';
-import { OktaConfig, OKTA_CONFIG, OKTA_AUTH } from './models/okta.config';
 
+// This is for setting up the `withOktaConfig` function (or other feature functions)
+export interface OktaAuthFeatures {
+  eProviders: Provider[];
+}
 
-@NgModule({
-  declarations: [
-    OktaCallbackComponent,
-    OktaHasAnyGroupDirective,
-  ],
-  exports: [
-    OktaCallbackComponent,
-    OktaHasAnyGroupDirective,
-  ],
-  providers: [
+export function withOktaConfig(config: OktaConfig): OktaAuthFeatures {
+  return {
+    eProviders: [{ provide: OKTA_CONFIG, useValue: config }]
+  };
+}
+
+export function provideOktaAuth(...features: OktaAuthFeatures[]): EnvironmentProviders {
+  
+  const providers: Provider[] = [
     OktaAuthConfigService,
     OktaAuthStateService,
     OktaAuthGuard,
     {
       provide: OKTA_AUTH,
-      useFactory: OktaAuthFactoryService.createOktaAuth,
+      useFactory: (configService: OktaAuthConfigService, router?: Router, location?: Location) => OktaAuthFactoryService.createOktaAuth(configService,router!, location!),
       deps: [
         OktaAuthConfigService,
         [new Optional(), Router],
         [new Optional(), Location]
       ]
-    },
-  ]
-})
-export class OktaAuthModule {
-  static forRoot(config?: OktaConfig): ModuleWithProviders<OktaAuthModule> {
-    return {
-      ngModule: OktaAuthModule,
-      providers: [
-        { provide: OKTA_CONFIG, useValue: config },
-      ]
-    };
-  }
+    }
+  ];
 
-  // Should not have constructor to support lazy load of config with APP_INITIALIZER
+  features.forEach(f => providers.push(...f.eProviders));
 
+  return makeEnvironmentProviders(providers);
 }

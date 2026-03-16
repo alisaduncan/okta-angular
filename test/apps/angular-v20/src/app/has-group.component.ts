@@ -11,10 +11,11 @@
  */
 
 import { Component } from '@angular/core';
+import { OktaHasAnyGroupDirective } from '@okta/okta-angular';
 
 @Component({
   selector: 'has-group',
-  standalone: false,
+  imports: [OktaHasAnyGroupDirective],
   template: `
   <div id="in-group" *oktaHasAnyGroup="['Test']">
     In "Test" group

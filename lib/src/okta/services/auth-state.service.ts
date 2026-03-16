@@ -1,4 +1,4 @@
-import { Injectable, OnDestroy, Inject } from '@angular/core';
+import { Injectable, inject, OnDestroy } from '@angular/core';
 import { AuthState, OktaAuth, UserClaims } from '@okta/okta-auth-js';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { mergeMap } from 'rxjs/operators';
@@ -10,16 +10,16 @@ const defaultAuthState = {
 
 export type Groups = string | string[] | { [key: string]: string[] };
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class OktaAuthStateService implements OnDestroy {
+  private oktaAuth = inject<OktaAuth>(OKTA_AUTH);
+
   private _authState: BehaviorSubject<AuthState> = new BehaviorSubject<AuthState>(defaultAuthState);
   
   // only expose readonly property
   public readonly authState$: Observable<AuthState> = this._authState.asObservable();
 
-  constructor(@Inject(OKTA_AUTH) private oktaAuth: OktaAuth) {
-    this.updateAuthState = this.updateAuthState.bind(this);
-
+  constructor() {
     // set initial authState
     const initialAuthState = this.oktaAuth.authStateManager.getAuthState() || defaultAuthState;
     this._authState.next(initialAuthState);
@@ -68,7 +68,7 @@ export class OktaAuthStateService implements OnDestroy {
     );
   }
 
-  private updateAuthState(authState: AuthState): void {
+  private updateAuthState = (authState: AuthState): void => {
     this._authState.next(authState);
   }
 }

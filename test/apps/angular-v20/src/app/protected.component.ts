@@ -10,7 +10,7 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-import { Component, inject, Inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { OKTA_AUTH } from '@okta/okta-angular';
 import { OktaAuth } from '@okta/okta-auth-js';
 
@@ -19,21 +19,21 @@ import { OktaAuth } from '@okta/okta-auth-js';
   template: `
   <div>
   {{ message }}<br/>
-  Claims: <pre id="claims-container">{{ claims }}</pre>
-  User: <pre id="userinfo-container">{{ user }}</pre>
+  Claims: <pre id="claims-container">{{ claims() }}</pre>
+  User: <pre id="userinfo-container">{{ user() }}</pre>
   </div>`
 })
 export class ProtectedComponent implements OnInit {
   message = 'Protected!';
-  user = '';
-  claims = '';
+  user = signal('');
+  claims = signal('');
 
-  oktaAuth = inject(OKTA_AUTH);
+  oktaAuth: OktaAuth = inject(OKTA_AUTH);
 
   async ngOnInit() {
     const user = await this.oktaAuth.getUser();
-    this.user = JSON.stringify(user, null, 4);
+    this.user.set(JSON.stringify(user, null, 4));
     const claims = await this.oktaAuth.authStateManager.getAuthState()?.idToken?.claims;
-    this.claims = JSON.stringify(claims, null, 4);
+    this.claims.set(JSON.stringify(claims, null, 4));
   }
 }

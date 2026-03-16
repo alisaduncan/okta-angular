@@ -1,4 +1,4 @@
-import { ApplicationConfig, EnvironmentProviders, inject, Provider, provideAppInitializer, provideZoneChangeDetection } from '@angular/core';
+import { ApplicationConfig, EnvironmentProviders, inject, Provider, provideAppInitializer, provideZonelessChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 
 import { routes } from './app.routes';
@@ -35,7 +35,7 @@ if (environment.asyncOktaConfig) {
 export const appConfig: ApplicationConfig = {
   providers: [
     ...providers,
-    provideZoneChangeDetection({ eventCoalescing: true }),
+    provideZonelessChangeDetection(),
     provideRouter(routes)
   ]
 };

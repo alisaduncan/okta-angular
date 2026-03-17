@@ -1,5 +1,5 @@
 {
-  "name": "@okta/test.app.ng20",
+  "name": "@okta/test.app.ng21",
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
@@ -13,22 +13,21 @@
   },
   "private": true,
   "dependencies": {
-    "@angular/common": "^20.3.0",
-    "@angular/compiler": "^20.3.0",
-    "@angular/core": "^20.3.0",
-    "@angular/forms": "^20.3.0",
-    "@angular/platform-browser": "^20.3.0",
-    "@angular/router": "^20.3.0",
+    "@angular/common": "^21.2.0",
+    "@angular/compiler": "^21.2.0",
+    "@angular/core": "^21.2.0",
+    "@angular/forms": "^21.2.0",
+    "@angular/platform-browser": "^21.2.0",
+    "@angular/router": "^21.2.0",
     "@okta/okta-angular": "../../../dist",
     "@okta/okta-auth-js": "^7.1.1",
     "rxjs": "~7.8.0",
-    "tslib": "^2.3.0",
-    "zone.js": "~0.15.0"
+    "tslib": "^2.3.0"
   },
   "devDependencies": {
-    "@angular/build": "^20.3.15",
-    "@angular/cli": "^20.3.15",
-    "@angular/compiler-cli": "^20.3.0",
+    "@angular/build": "^21.2.2",
+    "@angular/cli": "^21.2.2",
+    "@angular/compiler-cli": "^21.2.0",
     "lite-server": "^2.6.1",
     "typescript": "~5.9.2"
   },

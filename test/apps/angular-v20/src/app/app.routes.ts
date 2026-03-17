@@ -4,7 +4,7 @@ import { SessionTokenLoginComponent } from './sessionToken-login.component';
 import { ProtectedComponent } from './protected.component';
 import { PublicComponent } from './public.component';
 import { HasGroupComponent } from './has-group.component';
-import { OktaAuthGuard, OktaCallbackComponent } from '@okta/okta-angular';
+import { canActivateAuthGuard, canActivateChildAuthGuard, canMatchAuthGuard, OktaCallbackComponent } from '@okta/okta-angular';
 import { OktaAuth } from '@okta/okta-auth-js';
 
 export function onNeedsAuthenticationGuard(oktaAuth: OktaAuth, injector: Injector) {
@@ -24,7 +24,7 @@ export const routes: Routes = [
   {
     path: 'protected',
     component: ProtectedComponent,
-    canActivate: [ OktaAuthGuard ],
+    canActivate: [ canActivateAuthGuard ],
     children: [
       {
         path: 'foo',
@@ -36,7 +36,7 @@ export const routes: Routes = [
   {
     path: 'protected-with-data',
     component: ProtectedComponent,
-    canActivate: [ OktaAuthGuard ],
+    canActivate: [ canActivateAuthGuard ],
     data: {
       onAuthRequired: onNeedsAuthenticationGuard
     }
@@ -44,7 +44,7 @@ export const routes: Routes = [
   {
     path: 'public',
     component: PublicComponent,
-    canActivateChild: [ OktaAuthGuard ],
+    canActivateChild: [ canActivateChildAuthGuard ],
     children: [
       {
         path: 'private',
@@ -73,7 +73,7 @@ export const routes: Routes = [
   {
     path: 'lazy',
     loadComponent: () => import('./lazy-load/lazy-load.component').then(c => c.LazyLoadComponent),
-    canMatch: [ OktaAuthGuard ]
+    canMatch: [ canMatchAuthGuard ]
   },
   {
     path: 'group',

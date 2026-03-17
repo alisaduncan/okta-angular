@@ -12,7 +12,6 @@
 
 export { provideOktaAuth, withOktaConfig } from './okta/provide-okta';
 export type { OktaAuthFeatures } from './okta/provide-okta';
-export { OktaAuthGuard } from './okta/okta.guard';
 export { canActivateAuthGuard, canActivateChildAuthGuard, canMatchAuthGuard } from './okta/okta.guard';
 export { OKTA_CONFIG, OKTA_AUTH } from './okta/models/okta.config';
 export type { OktaConfig } from './okta/models/okta.config';

@@ -1230,7 +1230,7 @@
     proc-log "^6.0.0"
 
 "@okta/okta-angular@../../../dist":
-  version "7.0.0"
+  version "7.1.0"
   dependencies:
     compare-versions "^5.0.1"
     tslib "^2.4.0"

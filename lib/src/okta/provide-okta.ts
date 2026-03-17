@@ -33,7 +33,6 @@ export function provideOktaAuth(...features: OktaAuthFeatures[]): EnvironmentPro
   const providers: Provider[] = [
     OktaAuthConfigService,
     OktaAuthStateService,
-    OktaAuthGuard,
     {
       provide: OKTA_AUTH,
       useFactory: (configService: OktaAuthConfigService, router?: Router, location?: Location) => OktaAuthFactoryService.createOktaAuth(configService,router!, location!),

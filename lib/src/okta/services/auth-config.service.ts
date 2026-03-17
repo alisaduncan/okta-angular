@@ -5,13 +5,13 @@ import { OktaConfig, OKTA_CONFIG } from '../models/okta.config';
   providedIn: 'root'
 })
 export class OktaAuthConfigService {
-  private config = inject(OKTA_CONFIG, { optional: true }) ?? undefined;
+  #config = inject(OKTA_CONFIG, { optional: true }) ?? undefined;
 
   public getConfig(): OktaConfig | undefined {
-    return this.config;
+    return this.#config;
   }
 
   public setConfig(config: OktaConfig): void {
-    this.config = config;
+    this.#config = config;
   }
 }

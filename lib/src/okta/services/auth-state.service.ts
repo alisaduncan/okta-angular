@@ -1,5 +1,5 @@
 import { Injectable, inject, OnDestroy } from '@angular/core';
-import { AuthState, OktaAuth, UserClaims } from '@okta/okta-auth-js';
+import { AuthState, UserClaims } from '@okta/okta-auth-js';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { mergeMap } from 'rxjs/operators';
 import { OKTA_AUTH } from '../models/okta.config';
@@ -12,24 +12,24 @@ export type Groups = string | string[] | { [key: string]: string[] };
 
 @Injectable({ providedIn: 'root' })
 export class OktaAuthStateService implements OnDestroy {
-  private oktaAuth = inject<OktaAuth>(OKTA_AUTH);
+  #oktaAuth = inject(OKTA_AUTH);
 
-  private _authState: BehaviorSubject<AuthState> = new BehaviorSubject<AuthState>(defaultAuthState);
+  #authState: BehaviorSubject<AuthState> = new BehaviorSubject<AuthState>(defaultAuthState);
   
   // only expose readonly property
-  public readonly authState$: Observable<AuthState> = this._authState.asObservable();
+  public readonly authState$: Observable<AuthState> = this.#authState.asObservable();
 
   constructor() {
     // set initial authState
-    const initialAuthState = this.oktaAuth.authStateManager.getAuthState() || defaultAuthState;
-    this._authState.next(initialAuthState);
+    const initialAuthState = this.#oktaAuth.authStateManager.getAuthState() || defaultAuthState;
+    this.#authState.next(initialAuthState);
 
     // subscribe to future changes
-    this.oktaAuth.authStateManager.subscribe(this.updateAuthState);
+    this.#oktaAuth.authStateManager.subscribe(this.#updateAuthState);
   }
 
   ngOnDestroy(): void {
-    this.oktaAuth.authStateManager.unsubscribe(this.updateAuthState);
+    this.#oktaAuth.authStateManager.unsubscribe(this.#updateAuthState);
   }
 
   // Observes as true when any group input can match groups from user claims 
@@ -59,7 +59,7 @@ export class OktaAuthStateService implements OnDestroy {
 
         // try /userinfo endpoint when thin idToken (no groups claim) is returned
         // https://developer.okta.com/docs/concepts/api-access-management/#tokens-and-scopes
-        const userInfo = await this.oktaAuth.getUser();
+        const userInfo = await this.#oktaAuth.getUser();
         if (!userInfo[key]) {
           return false;
         }
@@ -68,7 +68,7 @@ export class OktaAuthStateService implements OnDestroy {
     );
   }
 
-  private updateAuthState = (authState: AuthState): void => {
-    this._authState.next(authState);
+  #updateAuthState = (authState: AuthState): void => {
+    this.#authState.next(authState);
   }
 }

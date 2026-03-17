@@ -12,8 +12,6 @@
 
 import { Injectable, Injector, inject } from '@angular/core';
 import {
-  CanActivate,
-  CanActivateChild,
   CanActivateFn,
   CanActivateChildFn,
   CanMatchFn,
@@ -26,21 +24,22 @@ import {
   Data
 } from '@angular/router';
 import { filter } from 'rxjs/operators';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
-import { OktaAuth, AuthState, TokenParams } from '@okta/okta-auth-js';
+import { AuthState, TokenParams } from '@okta/okta-auth-js';
 import { OktaAuthConfigService } from './services/auth-config.service';
 import { AuthRequiredFunction, OKTA_AUTH } from './models/okta.config';
 
 /**
- * Service that handles authentication logic for route guards
+ * Service that holds authentication state and helper methods for route guards
  */
 @Injectable({ providedIn: 'root' })
-export class OktaAuthGuard implements CanActivate, CanActivateChild {
-  private state!: RouterStateSnapshot;
-  private routeData!: Data;
-  private onAuthRequired?: AuthRequiredFunction;
-  private oktaAuth = inject<OktaAuth>(OKTA_AUTH);
-  private injector = inject(Injector);
+export class OktaAuthGuard {
+  state!: RouterStateSnapshot;
+  routeData!: Data;
+  onAuthRequired?: AuthRequiredFunction;
+  readonly oktaAuth = inject(OKTA_AUTH);
+  readonly injector = inject(Injector);
 
   constructor() {
     const configService = inject(OktaAuthConfigService);
@@ -51,61 +50,13 @@ export class OktaAuthGuard implements CanActivate, CanActivateChild {
     this.onAuthRequired = config.onAuthRequired;
 
     // Unsubscribe updateAuthStateListener when route change
-    const router = this.injector.get(Router);
+    const router = inject(Router);
     router.events.pipe(
-      filter((e: Event) => e instanceof NavigationStart && this.state && this.state.url !== e.url)
+      filter((e: Event) => e instanceof NavigationStart && this.state && this.state.url !== e.url),
+      takeUntilDestroyed()
     ).subscribe(() => {
       this.oktaAuth.authStateManager.unsubscribe(this.updateAuthStateListener);
     });
-  }
-
-  async canMatch(route: Route): Promise<boolean> {
-    const onAuthRequiredOverride = route.data?.['onAuthRequired'];
-    const currentOnAuthRequired = onAuthRequiredOverride || this.onAuthRequired;
-
-    const isAuthenticated = await this.isAuthenticated(route.data);
-    if (isAuthenticated) {
-      return true;
-    }
-
-    const router = this.injector.get(Router);
-    const nav = router.getCurrentNavigation();
-    const originalUri = nav ? nav.extractedUrl.toString() : undefined;
-    await this.handleLogin(originalUri, route.data, currentOnAuthRequired);
-
-    return false;
-  }
-
-  /**
-   * Gateway for protected route. Returns true if there is a valid idToken,
-   * otherwise it will cache the route and start the login flow.
-   * @param route
-   * @param state
-   */
-  async canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Promise<boolean> {
-    // Track states for current route
-    this.state = state;
-    this.routeData = route.data;
-    const onAuthRequiredOverride = route.data && route.data['onAuthRequired'];
-    const currentOnAuthRequired = onAuthRequiredOverride || this.onAuthRequired;
-
-    // Protect the route after accessing
-    this.oktaAuth.authStateManager.subscribe(this.updateAuthStateListener);
-    const isAuthenticated = await this.isAuthenticated(route.data);
-    if (isAuthenticated) {
-      return true;
-    }
-
-    await this.handleLogin(state.url, route.data, currentOnAuthRequired);
-
-    return false;
-  }
-
-  async canActivateChild(
-    route: ActivatedRouteSnapshot,
-    state: RouterStateSnapshot
-  ): Promise<boolean> {
-    return this.canActivate(route, state);
   }
 
   async isAuthenticated(routeData?: Data, authState?: AuthState | null): Promise<boolean> {
@@ -141,7 +92,7 @@ export class OktaAuthGuard implements CanActivate, CanActivateChild {
     }
   }
 
-  private updateAuthStateListener = async (authState: AuthState) => {
+  readonly updateAuthStateListener = async (authState: AuthState) => {
     const isAuthenticated = await this.isAuthenticated(this.routeData, authState);
     if (!isAuthenticated) {
       this.handleLogin(this.state.url, this.routeData);
@@ -152,24 +103,65 @@ export class OktaAuthGuard implements CanActivate, CanActivateChild {
 /**
  * Functional guard for canActivate
  */
-export const canActivateAuthGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => {
-  const guardService = inject(OktaAuthGuard);
-  return guardService.canActivate(route, state);
+export const canActivateAuthGuard: CanActivateFn = async (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => {
+  const guard = inject(OktaAuthGuard);
+
+  guard.state = state;
+  guard.routeData = route.data;
+  const onAuthRequiredOverride = route.data?.['onAuthRequired'];
+  const currentOnAuthRequired = onAuthRequiredOverride || guard.onAuthRequired;
+
+  // Protect the route after accessing
+  guard.oktaAuth.authStateManager.subscribe(guard.updateAuthStateListener);
+  const isAuthenticated = await guard.isAuthenticated(route.data);
+  if (isAuthenticated) {
+    return true;
+  }
+
+  await guard.handleLogin(state.url, route.data, currentOnAuthRequired);
+  return false;
 };
 
 /**
  * Functional guard for canActivateChild
  */
-export const canActivateChildAuthGuard: CanActivateChildFn = (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => {
-  const guardService = inject(OktaAuthGuard);
-  return guardService.canActivateChild(route, state);
+export const canActivateChildAuthGuard: CanActivateChildFn = async (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => {
+  const guard = inject(OktaAuthGuard);
+
+  guard.state = state;
+  guard.routeData = route.data;
+  const onAuthRequiredOverride = route.data?.['onAuthRequired'];
+  const currentOnAuthRequired = onAuthRequiredOverride || guard.onAuthRequired;
+
+  guard.oktaAuth.authStateManager.subscribe(guard.updateAuthStateListener);
+  const isAuthenticated = await guard.isAuthenticated(route.data);
+  if (isAuthenticated) {
+    return true;
+  }
+
+  await guard.handleLogin(state.url, route.data, currentOnAuthRequired);
+  return false;
 };
 
 /**
  * Functional guard for canMatch
  */
-export const canMatchAuthGuard: CanMatchFn = (route: Route) => {
-  const guardService = inject(OktaAuthGuard);
-  return guardService.canMatch(route);
+export const canMatchAuthGuard: CanMatchFn = async (route: Route) => {
+  const guard = inject(OktaAuthGuard);
+  const router = inject(Router);
+
+  const onAuthRequiredOverride = route.data?.['onAuthRequired'];
+  const currentOnAuthRequired = onAuthRequiredOverride || guard.onAuthRequired;
+
+  const isAuthenticated = await guard.isAuthenticated(route.data);
+  if (isAuthenticated) {
+    return true;
+  }
+
+  const nav = router.getCurrentNavigation();
+  const originalUri = nav ? nav.extractedUrl.toString() : undefined;
+  await guard.handleLogin(originalUri, route.data, currentOnAuthRequired);
+
+  return false;
 };
 

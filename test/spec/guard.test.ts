@@ -7,8 +7,12 @@ import {
   OKTA_AUTH,
   OKTA_CONFIG,
 } from '../../lib/src/okta-angular';
+import {
+  canActivateAuthGuard,
+  canActivateChildAuthGuard,
+  canMatchAuthGuard,
+} from '../../lib/src/okta/okta.guard';
 import { AuthRequiredFunction } from '../../lib/src/okta/models/okta.config';
-import { OktaAuthConfigService } from '../../lib/src/okta/services/auth-config.service';
 import { 
   ActivatedRouteSnapshot, 
   RouterStateSnapshot, 
@@ -53,23 +57,21 @@ describe('Angular auth guard', () => {
     jest.restoreAllMocks();
   });
 
-  describe('canLoad', () => {
+  describe('canMatch', () => {
     describe('isAuthenticated() = true', () => {
       it('returns true', async () => {
         const oktaAuth = {
           isAuthenticated: jest.fn().mockResolvedValue(true),
         } as unknown;
         setup(oktaAuth as OktaAuth, {} as OktaConfig);
-        const guard = TestBed.runInInjectionContext(() => new OktaAuthGuard());
         const route: unknown = {};
-        const res = await guard.canMatch(route as Route);
+        const res = await TestBed.runInInjectionContext(() => canMatchAuthGuard(route as Route, []));
         expect(res).toBe(true);
       });
     });
 
     describe('isAuthenticated() = false', () => {
       let oktaAuth: OktaAuth;
-      let guard: OktaAuthGuard;
       let route: Route;
       let router: Router;
       let injector: Injector;
@@ -84,17 +86,16 @@ describe('Angular auth guard', () => {
         const config = { oktaAuth } as OktaConfig;
         setup(oktaAuth, config);
         injector = TestBed.inject(Injector);
-        guard = TestBed.runInInjectionContext(() => new OktaAuthGuard());
         route = {} as unknown as Route;
       });
 
       it('returns false', async () => {
-        const res = await guard.canMatch(route);
+        const res = await TestBed.runInInjectionContext(() => canMatchAuthGuard(route, []));
         expect(res).toBe(false);
       });
 
       it('by default, calls "signInWithRedirect()"', async () => {
-        await guard.canMatch(route);
+        await TestBed.runInInjectionContext(() => canMatchAuthGuard(route, []));
         expect(oktaAuth.signInWithRedirect).toHaveBeenCalled();
       });
 
@@ -113,7 +114,7 @@ describe('Angular auth guard', () => {
           trigger: 'imperative',
         });
 
-        await guard.canMatch(route);
+        await TestBed.runInInjectionContext(() => canMatchAuthGuard(route, []));
         expect(oktaAuth.setOriginalUri).toHaveBeenCalledWith('/path?query=foo&bar=baz#hash=foo');
       });
 
@@ -122,17 +123,14 @@ describe('Angular auth guard', () => {
         route.data = {
           onAuthRequired: mockFn
         };
-        await guard.canMatch(route);
+        await TestBed.runInInjectionContext(() => canMatchAuthGuard(route, []));
         const options = {};
         expect(mockFn).toHaveBeenCalledWith(oktaAuth, injector, options);
       });
 
       it('onAuthRequired can be set on config', async () => {
-        const config = { oktaAuth, onAuthRequired };
-        const existingConfigService = TestBed.inject(OktaAuthConfigService);
-        jest.spyOn(existingConfigService, 'getConfig').mockReturnValue(config);
-        guard = TestBed.runInInjectionContext(() => new OktaAuthGuard());
-        await guard.canMatch(route);
+        TestBed.inject(OktaAuthGuard).onAuthRequired = onAuthRequired;
+        await TestBed.runInInjectionContext(() => canMatchAuthGuard(route, []));
         const options = {};
         expect(onAuthRequired).toHaveBeenCalledWith(oktaAuth, injector, options);
       });
@@ -156,7 +154,6 @@ describe('Angular auth guard', () => {
           }
         } as unknown;
         setup(oktaAuth as OktaAuth, {} as OktaConfig);
-        const guard = TestBed.runInInjectionContext(() => new OktaAuthGuard());
         const route: unknown = {
           data: {
             okta: {
@@ -164,14 +161,13 @@ describe('Angular auth guard', () => {
             }
           }
         };
-        const res = await guard.canMatch(route as Route);
+        const res = await TestBed.runInInjectionContext(() => canMatchAuthGuard(route as Route, []));
         expect(res).toBe(true);
       });
     });
 
     describe('isAuthenticated() = true and "acr" claim does not match provided acrValues', () => {
       let oktaAuth: OktaAuth;
-      let guard: OktaAuthGuard;
       let route: Route;
       let injector: Injector;
       beforeEach(() => {
@@ -194,7 +190,6 @@ describe('Angular auth guard', () => {
         const config = { oktaAuth } as OktaConfig;
         setup(oktaAuth, config);
         injector = TestBed.inject(Injector);
-        guard = TestBed.runInInjectionContext(() => new OktaAuthGuard());
         route = {
           data: {
             okta: {
@@ -205,12 +200,12 @@ describe('Angular auth guard', () => {
       });
 
       it('returns false', async () => {
-        const res = await guard.canMatch(route);
+        const res = await TestBed.runInInjectionContext(() => canMatchAuthGuard(route, []));
         expect(res).toBe(false);
       });
 
       it('by default, calls "signInWithRedirect({ acrValues })"', async () => {
-        await guard.canMatch(route);
+        await TestBed.runInInjectionContext(() => canMatchAuthGuard(route, []));
         expect(oktaAuth.signInWithRedirect).toHaveBeenCalledWith({
           acrValues: 'urn:okta:loa:2fa:any'
         });
@@ -222,7 +217,7 @@ describe('Angular auth guard', () => {
           ...route.data,
           onAuthRequired: mockFn,
         };
-        await guard.canMatch(route);
+        await TestBed.runInInjectionContext(() => canMatchAuthGuard(route, []));
         const options = {
           acrValues: 'urn:okta:loa:2fa:any'
         };
@@ -241,17 +236,15 @@ describe('Angular auth guard', () => {
           }
         } as unknown;
         setup(oktaAuth as OktaAuth, {} as OktaConfig);
-        const guard = TestBed.runInInjectionContext(() => new OktaAuthGuard());
         const route: unknown = {};
         const state: unknown = {};
-        const res = await guard.canActivate(route as ActivatedRouteSnapshot, state as RouterStateSnapshot);
+        const res = await TestBed.runInInjectionContext(() => canActivateAuthGuard(route as ActivatedRouteSnapshot, state as RouterStateSnapshot));
         expect(res).toBe(true);
       });
     });
 
     describe('isAuthenticated() = false', () => {
       let oktaAuth: OktaAuth;
-      let guard: OktaAuthGuard;
       let state: RouterStateSnapshot;
       let route: ActivatedRouteSnapshot;
       let router: Router;
@@ -271,19 +264,18 @@ describe('Angular auth guard', () => {
         setup(oktaAuth, config);
         router = TestBed.inject(Router);
         injector = TestBed.inject(Injector);
-        guard = TestBed.runInInjectionContext(() => new OktaAuthGuard());
         const routerState: RouterState = router.routerState;
         state = routerState.snapshot;
         route = state.root;
       });
 
       it('returns false', async () => {
-        const res = await guard.canActivate(route, state);
+        const res = await TestBed.runInInjectionContext(() => canActivateAuthGuard(route, state));
         expect(res).toBe(false);
       });
 
       it('by default, calls "signInWithRedirect()"', async () => {
-        await guard.canActivate(route, state);
+        await TestBed.runInInjectionContext(() => canActivateAuthGuard(route, state));
         expect(oktaAuth.signInWithRedirect).toHaveBeenCalled();
       });
 
@@ -294,23 +286,20 @@ describe('Angular auth guard', () => {
         state.url = `${baseUrl}${query}${hash}`;
         const queryObj = { 'bar': 'baz' };
         route.queryParams = queryObj;
-        await guard.canActivate(route, state);
+        await TestBed.runInInjectionContext(() => canActivateAuthGuard(route, state));
         expect(oktaAuth.setOriginalUri).toHaveBeenCalledWith(state.url);
       });
 
       it('onAuthRequired can be set on route', async () => {
         const fn = route.data['onAuthRequired'] = jest.fn();
-        await guard.canActivate(route, state);
+        await TestBed.runInInjectionContext(() => canActivateAuthGuard(route, state));
         const options = {};
         expect(fn).toHaveBeenCalledWith(oktaAuth, injector, options);
       });
 
       it('onAuthRequired can be set on config', async () => {
-        const config = { oktaAuth, onAuthRequired };
-        const existingConfigService = TestBed.inject(OktaAuthConfigService);
-        jest.spyOn(existingConfigService, 'getConfig').mockReturnValue(config);
-        guard = TestBed.runInInjectionContext(() => new OktaAuthGuard());
-        await guard.canActivate(route, state);
+        TestBed.inject(OktaAuthGuard).onAuthRequired = onAuthRequired;
+        await TestBed.runInInjectionContext(() => canActivateAuthGuard(route, state));
         const options = {};
         expect(onAuthRequired).toHaveBeenCalledWith(oktaAuth, injector, options);
       });
@@ -335,7 +324,6 @@ describe('Angular auth guard', () => {
           }
         } as unknown;
         setup(oktaAuth as OktaAuth, {} as OktaConfig);
-        const guard = TestBed.runInInjectionContext(() => new OktaAuthGuard());
         const route: unknown = {
           data: {
             okta: {
@@ -344,14 +332,13 @@ describe('Angular auth guard', () => {
           }
         };
         const state: unknown = {};
-        const res = await guard.canActivate(route as ActivatedRouteSnapshot, state as RouterStateSnapshot);
+        const res = await TestBed.runInInjectionContext(() => canActivateAuthGuard(route as ActivatedRouteSnapshot, state as RouterStateSnapshot));
         expect(res).toBe(true);
       });
     });
 
     describe('isAuthenticated() = true and "acr" claim does not match provided acrValues', () => {
       let oktaAuth: OktaAuth;
-      let guard: OktaAuthGuard;
       let state: RouterStateSnapshot;
       let route: ActivatedRouteSnapshot;
       let router: Router;
@@ -378,7 +365,6 @@ describe('Angular auth guard', () => {
         setup(oktaAuth, config);
         router = TestBed.inject(Router);
         injector = TestBed.inject(Injector);
-        guard = TestBed.runInInjectionContext(() => new OktaAuthGuard());
         const routerState: RouterState = router.routerState;
         state = routerState.snapshot;
         route = state.root;
@@ -390,12 +376,12 @@ describe('Angular auth guard', () => {
       });
 
       it('returns false', async () => {
-        const res = await guard.canActivate(route, state);
+        const res = await TestBed.runInInjectionContext(() => canActivateAuthGuard(route, state));
         expect(res).toBe(false);
       });
 
       it('by default, calls "signInWithRedirect({ acrValues })"', async () => {
-        await guard.canActivate(route, state);
+        await TestBed.runInInjectionContext(() => canActivateAuthGuard(route, state));
         expect(oktaAuth.signInWithRedirect).toHaveBeenCalledWith({
           acrValues: 'urn:okta:loa:2fa:any'
         });
@@ -407,7 +393,7 @@ describe('Angular auth guard', () => {
           ...route.data,
           onAuthRequired: mockFn
         };
-        await guard.canActivate(route, state);
+        await TestBed.runInInjectionContext(() => canActivateAuthGuard(route, state));
         const options = {
           acrValues: 'urn:okta:loa:2fa:any'
         };
@@ -417,9 +403,8 @@ describe('Angular auth guard', () => {
   });
 
   describe('canActivateChild', () => {
-    let oktaAuth;
-    it('calls canActivate', () => {
-      oktaAuth = {
+    it('returns false when not authenticated', async () => {
+      const oktaAuth = {
         isAuthenticated: jest.fn().mockResolvedValue(false),
         authStateManager: {
           subscribe: jest.fn()
@@ -429,15 +414,14 @@ describe('Angular auth guard', () => {
       } as unknown as OktaAuth;
       const config = { oktaAuth } as OktaConfig;
       setup(oktaAuth, config);
-      const guard = TestBed.runInInjectionContext(() => new OktaAuthGuard());
       const router = TestBed.inject(Router);
       const routerState: RouterState = router.routerState;
       const state = routerState.snapshot;
       const route = state.root;
 
-      jest.spyOn(guard, 'canActivate').mockReturnValue(Promise.resolve(true));
-      guard.canActivateChild(route, state);
-      expect(guard.canActivate).toHaveBeenCalledWith(route, state);
+      const res = await TestBed.runInInjectionContext(() => canActivateChildAuthGuard(route, state));
+      expect(res).toBe(false);
+      expect(oktaAuth.signInWithRedirect).toHaveBeenCalled();
     });
   });
 });

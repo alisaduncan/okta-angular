@@ -73,7 +73,7 @@ export const routes: Routes = [
   {
     path: 'lazy',
     loadComponent: () => import('./lazy-load/lazy-load.component').then(c => c.LazyLoadComponent),
-    canActivate: [ OktaAuthGuard ] // CanLoad is not supported for loadComponent, so we use canActivate to protect the route instead. Needs to switch to canMatch
+    canMatch: [ OktaAuthGuard ]
   },
   {
     path: 'group',

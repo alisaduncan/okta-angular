@@ -5,19 +5,19 @@ import { OktaAuthStateService, Groups } from './services/auth-state.service';
 
 @Directive({ selector: '[oktaHasAnyGroup]'})
 export class OktaHasAnyGroupDirective {
-  private templateRef = inject(TemplateRef);
-  private viewContainer = inject(ViewContainerRef);
-  private authStateService = inject(OktaAuthStateService);
+  #templateRef = inject(TemplateRef);
+  #viewContainer = inject(ViewContainerRef);
+  #authStateService = inject(OktaAuthStateService);
 
   oktaHasAnyGroup = input.required<Groups>();
 
   private subscription = toObservable(this.oktaHasAnyGroup).pipe(
-    switchMap(groups => this.authStateService.hasAnyGroups(groups)),
+    switchMap(groups => this.#authStateService.hasAnyGroups(groups)),
     takeUntilDestroyed()
   ).subscribe(isAuthorized => {
-    this.viewContainer.clear();
+    this.#viewContainer.clear();
     if (isAuthorized) {
-      this.viewContainer.createEmbeddedView(this.templateRef);
+      this.#viewContainer.createEmbeddedView(this.#templateRef);
     }
   });
 }

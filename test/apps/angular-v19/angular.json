@@ -56,12 +56,7 @@
             "styles": [
               "src/styles.css"
             ],
-            "scripts": [],
-            "allowedCommonJsDependencies": [
-              "p-cancelable",
-              "cross-fetch",
-              "tiny-emitter"
-            ]
+            "scripts": []
           },
           "configurations": {
             "production": {

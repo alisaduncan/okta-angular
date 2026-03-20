@@ -14,7 +14,6 @@ import { EnvironmentProviders, makeEnvironmentProviders, Optional, Provider } fr
 import { Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { OktaAuthConfigService, OktaAuthStateService, OKTA_AUTH, OKTA_CONFIG, OktaConfig } from '../okta-angular';
-import { OktaAuthGuard } from './okta.guard';
 import { OktaAuthFactoryService } from './services/auth-factory.service';
 
 // This is for setting up the `withOktaConfig` function (or other feature functions)

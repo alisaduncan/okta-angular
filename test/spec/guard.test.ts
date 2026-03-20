@@ -2,12 +2,12 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
 import {
-  OktaAuthGuard,
   OktaConfig,
   OKTA_AUTH,
   OKTA_CONFIG,
 } from '../../lib/src/okta-angular';
 import {
+  OktaAuthGuard,
   canActivateAuthGuard,
   canActivateChildAuthGuard,
   canMatchAuthGuard,
@@ -35,6 +35,7 @@ jest.mock('../../lib/src/okta/packageInfo', () => ({
 function setup(oktaAuth: OktaAuth, config: OktaConfig) {
   config = config || {};
 
+  TestBed.resetTestingModule();
   TestBed.configureTestingModule({
     providers: [
       provideRouter([]),

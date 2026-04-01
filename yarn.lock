@@ -6308,6 +6308,11 @@ escodegen@^2.0.0, escodegen@^2.1.0:
   optionalDependencies:
     source-map "~0.6.1"
 
+eslint-formatter-checkstyle@^9.0.1:
+  version "9.0.1"
+  resolved "https://registry.yarnpkg.com/eslint-formatter-checkstyle/-/eslint-formatter-checkstyle-9.0.1.tgz#23eba44f5c8f38a7af202dbaf311be5b75432dbb"
+  integrity sha512-DeD1XkqFr22ZK+KsREcW3YFUsYtS5hTZb52m+fLVeAHMnTtgtLP9xiA55b5qiNvNxDf/hbTN+9X8lZl9jHH/cQ==
+
 eslint-plugin-es@^3.0.0:
   version "3.0.1"
   resolved "https://registry.yarnpkg.com/eslint-plugin-es/-/eslint-plugin-es-3.0.1.tgz#75a7cdfdccddc0589934aeeb384175f221c57893"
